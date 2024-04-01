@@ -8,7 +8,7 @@ val options = listOf(
     WeightUnit("Cat", 4.535924),
     WeightUnit("Human Male", 62.0),
     WeightUnit("Banana", 0.118),
-)
+).sortedBy { it.name }
 
 class WeightUnit(val name: String, private val weight /* Kg */: Double) {
     fun convertTo(targetUnit: WeightUnit, amount: Double): Double {

@@ -18,7 +18,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import dev.ppag.weightconverter.ui.theme.WeightConverterTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,8 +41,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        verticalArrangement = Arrangement.spacedBy(108.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // currently selected weight units
                         var unitIn by remember { mutableStateOf(options[0]) }
@@ -62,15 +62,22 @@ class MainActivity : ComponentActivity() {
                                 text.toDouble()
                         }
 
+                        // input
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
+                            InputField({
+                                outputText = unitIn.convertTo(unitOut, inputText).toString()
+                            }, { handleInput(it) })
+                            WeightTypeDropdown(
+                                { unitIn = it },
+                                { outputText = unitIn.convertTo(unitOut, inputText).toString() })
+                        }
 
-                        InputField({ outputText = unitIn.convertTo(unitOut, inputText).toString() }, { handleInput(it) })
-                        WeightTypeDropdown({ unitIn = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
-                        OutputField(outputText)
-                        WeightTypeDropdown({ unitOut = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
-
-                        // debug, prints out when vars change
-                        LaunchedEffect(unitIn, unitOut) {
-                            println("Selected units: $unitIn, $unitOut")
+                        // output
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
+                            OutputField(outputText)
+                            WeightTypeDropdown(
+                                { unitOut = it },
+                                { outputText = unitIn.convertTo(unitOut, inputText).toString() })
                         }
                     }
                 }
@@ -107,10 +114,8 @@ fun WeightTypeDropdown(onUnitSelected: (WeightUnit) -> Unit, convert: () -> Unit
         }
 
         // Button to activate dropdown menu
-        Row {
-            ElevatedButton(onClick = { isExpanded = true }) {
-                Text(text = selectedOption.name)
-            }
+        ElevatedButton(onClick = { isExpanded = true }) {
+            Text(text = selectedOption.name)
         }
     }
 }
@@ -118,14 +123,12 @@ fun WeightTypeDropdown(onUnitSelected: (WeightUnit) -> Unit, convert: () -> Unit
 @Composable
 fun OutputField(text: String) {
     // display output
-    Row {
-        OutlinedTextField(
-            value = text,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.focusable(false),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),)
-    }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {},
+        readOnly = true,
+        modifier = Modifier.focusable(false),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),)
 }
 
 @Composable
@@ -134,21 +137,19 @@ fun InputField(convert: () -> Unit, onInputChange: (String) -> Unit, modifier: M
     var text by remember { mutableStateOf("") }
 
     // display user input
-    Row {
-        OutlinedTextField(value = text,
-            onValueChange = {newValue ->
-                // check if its a number or period
-                text = if (newValue.matches(Regex("^\\d+(\\.\\d*)?$"))) {
-                    newValue
-                } else {
-                    "" }
-                onInputChange(text)
-                convert() },
-            modifier = modifier,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(text = "Input") }
-        )
-    }
+    OutlinedTextField(value = text,
+        onValueChange = {newValue ->
+            // check if its a number or period
+            text = if (newValue.matches(Regex("^\\d+(\\.\\d*)?$"))) {
+                newValue
+            } else {
+                "" }
+            onInputChange(text)
+            convert() },
+        modifier = modifier,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        label = { Text(text = "Input") }
+    )
 }
 
 @Preview(showBackground = true)
