@@ -1,12 +1,13 @@
 package dev.ppag.weightconverter
 
-val Wolverine = WeightUnit("Wolverine", 5.9)
-val Human = WeightUnit("Human", 68.0)
+// weight units used in the app
+val options = listOf(
+    WeightUnit("Human", 150.0),
+    WeightUnit("Wolverine", 13.0)
+)
 
-
-
-class WeightUnit(val name: String, val weight: Double) {
+class WeightUnit(val name: String, private val weight: Double) {
     fun convertTo(targetUnit: WeightUnit, amount: Double): Double {
-        return this.weight / (targetUnit.weight * amount)
+        return (this.weight * amount) / targetUnit.weight
     }
 }

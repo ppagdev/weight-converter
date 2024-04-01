@@ -3,6 +3,7 @@ package dev.ppag.weightconverter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,10 +36,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         // currently selected weight units
-                        var unitIn by remember { mutableStateOf(Human) }
-                        var unitOut by remember { mutableStateOf(Human) }
+                        var unitIn by remember { mutableStateOf(options[0]) }
+                        var unitOut by remember { mutableStateOf(options[0]) }
 
                         // output text value
                         var outputText by remember { mutableStateOf("") }
@@ -56,10 +60,9 @@ class MainActivity : ComponentActivity() {
 
 
                         InputField({ outputText = unitIn.convertTo(unitOut, inputText).toString() }, { handleInput(it) })
-                        WeightTypeDropdown("in", unitIn, { unitIn = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
-                        ConvertButton()
+                        WeightTypeDropdown({ unitIn = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
                         OutputField(outputText)
-                        WeightTypeDropdown("out", unitOut, { unitOut = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
+                        WeightTypeDropdown({ unitOut = it }, { outputText = unitIn.convertTo(unitOut, inputText).toString() })
 
                         // debug, prints out when vars change
                         LaunchedEffect(unitIn, unitOut) {
@@ -73,17 +76,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ConvertButton() {
-    ElevatedButton(onClick = {}) {
-        Icon(painter = painterResource(id = R.drawable.swap_horiz_fill0_wght400_grad0_opsz24),
-            contentDescription = "Swap Icon, for activating conversion")
-    }
-}
-
-@Composable
-fun WeightTypeDropdown(name: String, unit: WeightUnit, onUnitSelected: (WeightUnit) -> Unit, convert: () -> Unit, modifier: Modifier = Modifier) {
+fun WeightTypeDropdown(onUnitSelected: (WeightUnit) -> Unit, convert: () -> Unit, modifier: Modifier = Modifier) {
     // temporary list of options
-    val options = listOf(Human, Wolverine)
     var selectedOption by remember { mutableStateOf(options[0]) }
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -121,7 +115,11 @@ fun WeightTypeDropdown(name: String, unit: WeightUnit, onUnitSelected: (WeightUn
 fun OutputField(text: String, modifier: Modifier = Modifier) {
     // display output
     Row {
-        Text(text = text, modifier.padding(24.dp))
+        OutlinedTextField(
+            value = text,
+            onValueChange = {},
+            readOnly = true,
+            label = {Text(text = "Output")})
     }
 }
 
@@ -139,8 +137,8 @@ fun InputField(convert: () -> Unit, onInputChange: (String) -> Unit, modifier: M
                     newValue
                 } else {
                     "" }
-                convert()
-                onInputChange(text) },
+                onInputChange(text)
+                convert() },
             modifier = modifier,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             label = { Text(text = "Input") }
