@@ -13,10 +13,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -40,8 +42,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        TopTitleBar()
+                    }
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(108.dp, Alignment.CenterVertically),
+                        verticalArrangement = Arrangement.spacedBy(78.dp, Alignment.CenterVertically),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // currently selected weight units
@@ -66,7 +71,8 @@ class MainActivity : ComponentActivity() {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                             InputField({
                                 outputText = unitIn.convertTo(unitOut, inputText).toString()
-                            }, { handleInput(it) })
+                            }, { handleInput(it) },
+                                Modifier.weight(1f))
                             WeightTypeDropdown(
                                 { unitIn = it },
                                 { outputText = unitIn.convertTo(unitOut, inputText).toString() })
@@ -74,7 +80,7 @@ class MainActivity : ComponentActivity() {
 
                         // output
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
-                            OutputField(outputText)
+                            OutputField(outputText, Modifier.weight(1f))
                             WeightTypeDropdown(
                                 { unitOut = it },
                                 { outputText = unitIn.convertTo(unitOut, inputText).toString() })
@@ -84,6 +90,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopTitleBar() {
+    TopAppBar(title = { Text("Weight Converter") })
 }
 
 @Composable
@@ -121,13 +133,14 @@ fun WeightTypeDropdown(onUnitSelected: (WeightUnit) -> Unit, convert: () -> Unit
 }
 
 @Composable
-fun OutputField(text: String) {
+fun OutputField(text: String, modifier: Modifier = Modifier) {
     // display output
     OutlinedTextField(
         value = text,
         onValueChange = {},
         readOnly = true,
-        modifier = Modifier.focusable(false),
+        modifier = modifier.focusable(false),
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),)
 }
 
@@ -148,6 +161,7 @@ fun InputField(convert: () -> Unit, onInputChange: (String) -> Unit, modifier: M
             convert() },
         modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
         label = { Text(text = "Input") }
     )
 }
@@ -156,6 +170,6 @@ fun InputField(convert: () -> Unit, onInputChange: (String) -> Unit, modifier: M
 @Composable
 fun Preview() {
     WeightConverterTheme {
-        OutputField("Output")
+        TopTitleBar()
     }
 }
