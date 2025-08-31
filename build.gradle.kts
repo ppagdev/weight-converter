@@ -2,4 +2,7 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
+    alias(libs.plugins.compose.compiler)
+    kotlin("plugin.serialization") version "1.9.0" apply false
 }
+val kotlinJvmTarget by extra("1.8")

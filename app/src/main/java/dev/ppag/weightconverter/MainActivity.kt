@@ -10,16 +10,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,8 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.ppag.weightconverter.ui.theme.WeightConverterTheme
@@ -38,6 +44,11 @@ import dev.ppag.weightconverter.ui.theme.WeightConverterTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Load weight units from SharedPreferences
+        options.clear() // Clear existing units
+        options.addAll(loadWeightUnits(this)) // Load units
+
         setContent {
             WeightConverterTheme {
                 // A surface container using the 'background' color from the theme
@@ -81,6 +92,8 @@ class MainActivity : ComponentActivity() {
                                 { outputText = unitIn.convertTo(unitOut, inputText).toString() },
                                 unitIn)
                         }
+
+                        // Quick Swap Button
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally) ) {
                             SwapButton({ val temp = unitIn; unitIn = unitOut; unitOut = temp },
                             { outputText = unitIn.convertTo(unitOut, inputText).toString() },)
@@ -102,6 +115,62 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun AddUnitDialog(onDismiss: () -> Unit, onAddUnit: (WeightUnit) -> Unit) {
+    var unitName by remember { mutableStateOf(TextFieldValue("")) }
+    var unitValue by remember { mutableStateOf(TextFieldValue("")) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add New Unit") },
+        text = {
+            Column {
+                TextField(
+                    value = unitName,
+                    onValueChange = { unitName = it },
+                    label = { Text("Unit Name") }
+                )
+                TextField(
+                    value = unitValue,
+                    onValueChange = { unitValue = it },
+                    label = { Text("Weight in Kg") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    // Handle the logic to save the new unit here
+                    val weightInKg = unitValue.text.toDoubleOrNull()
+                    if (!unitName.text.isBlank() && weightInKg != null) {
+                        val newUnit = WeightUnit(unitName.text, weightInKg)
+                        onAddUnit(newUnit) // Add the new unit to the list
+                    }
+                    onDismiss() // Close the dialog after saving
+                }
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+// Add Unit Button
+@Composable
+fun AddUnitButton(onClick: () -> Unit) {
+    FilledIconButton(onClick = { onClick() }) {
+        Icon(
+            painter = painterResource(R.drawable.add_24px),
+            contentDescription = "Add Unit Icon",
+        )
+    }
+}
+
+@Composable
 fun SwapButton(swap: () -> Unit, convert: () -> Unit) {
     OutlinedIconButton(onClick = { swap(); convert() },
         content = {
@@ -116,7 +185,29 @@ fun SwapButton(swap: () -> Unit, convert: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopTitleBar() {
-    TopAppBar(title = { Text("Weight Converter") })
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current // Get the context here
+
+    TopAppBar(
+        title = {
+            Text("Weight Converter")
+        },
+        actions = {
+            // Add Unit Button
+            AddUnitButton { showDialog = true }
+        }
+    )
+
+    if (showDialog) {
+        AddUnitDialog(
+            onDismiss = { showDialog = false },
+            onAddUnit = { newUnit ->
+                options.add(newUnit) // Add the new unit to the list
+                options.sortBy { it.name } // Sort the list after adding
+                saveWeightUnits(context, options) // Save the updated list
+            }
+        )
+    }
 }
 
 @Composable
